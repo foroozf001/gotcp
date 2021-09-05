@@ -8,7 +8,7 @@ docker build -t farazf001/gotcp:latest -f Dockerfile .
 ```sh
 docker container run --name=gotcp -dt -p 8080:8080 farazf001/gotcp:latest
 ```
-## Gotcp server
+## Webserver
 The webserver exposes two endpoints with customizable URL parameters:
-* ```/healthz?host=172.18.0.2&port=80&timeout=200```
+* ```/healthz?host=172.18.0.2&port=80```
 * ```/reportz?host=172.18.0.2&startPort=1&endPort=100000```
