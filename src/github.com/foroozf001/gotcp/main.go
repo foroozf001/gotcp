@@ -2,79 +2,58 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 )
 
-const portNumber = ":8080"
+const server = ":8080"
 
 func main() {
-	http.HandleFunc("/healthz", healthz)
-	http.HandleFunc("/reportz", reportz)
-	fmt.Printf("Starting Portcat server on port %s\n", portNumber)
-	_ = http.ListenAndServe(portNumber, nil)
+	http.HandleFunc("/health", Health)
+	http.HandleFunc("/report", Report)
+	fmt.Printf("Starting gotcp server on port %s\n", server)
+	_ = http.ListenAndServe(server, nil)
 }
 
-func extract(w http.ResponseWriter, r *http.Request, m map[string]string) {
-	for key := range m {
-		keys, ok := r.URL.Query()[key]
-		if !ok || len(keys[0]) < 1 {
-			log.Println("missing " + key)
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("400 Bad Request"))
-			return
-		}
-		m[key] = string(keys[0])
+func Health(w http.ResponseWriter, r *http.Request) {
+	params := GetUrlParameters(r, KEY_HOST, KEY_PORT)
+	var scanner Scanner
+	var err error
+	scanner.Host = params[0]
+	if len(scanner.Host) < 1 {
+		panic("empty " + KEY_HOST)
 	}
-}
-
-func healthz(w http.ResponseWriter, r *http.Request) {
-	tp := map[string]string{"host": "default", "port": "-1"}
-	extract(w, r, tp)
-	host := tp["host"]
-	if len(host) < 1 {
-		panic("empty host")
-	}
-	port, err := strconv.ParseInt(tp["port"], 10, 64)
+	scanner.Port, err = strconv.ParseInt(params[1], 10, 64)
 	if err != nil {
 		panic(err)
 	}
-	ports := scan(host, port, port)
+	ports := scanner.Scan(scanner.Port, scanner.Port)
 	if len(ports) < 1 {
-		w.WriteHeader(http.StatusBadGateway)
-		w.Write([]byte("502 Bad Gateway"))
+		w.WriteHeader(http.StatusRequestTimeout)
+		w.Write([]byte("408 Request Timeout"))
 	} else {
 		w.Write([]byte("200 OK"))
 	}
 }
 
-func reportz(w http.ResponseWriter, r *http.Request) {
-	rp := map[string]string{"host": "default", "startPort": "-1", "endPort": "-2"}
-	extract(w, r, rp)
-	host := rp["host"]
-	if len(host) < 1 {
-		panic("empty host")
+func Report(w http.ResponseWriter, r *http.Request) {
+	params := GetUrlParameters(r, KEY_HOST)
+	var scanner Scanner
+	scanner.Host = params[0]
+	if len(scanner.Host) < 1 {
+		panic("empty " + KEY_HOST)
 	}
-	startPort, err := strconv.ParseInt(rp["startPort"], 10, 64)
-	if err != nil {
-		panic(err)
-	}
-	endPort, err := strconv.ParseInt(rp["endPort"], 10, 64)
-	if err != nil {
-		panic(err)
-	}
-	ports := scan(host, startPort, endPort)
-	resp := "gotcp scanner (https://github.com/foroozf001/gotcp)\n"
-	resp += "Target host: " + host + "\n"
-	resp += "Port range: " + fmt.Sprint(startPort) + "-" + fmt.Sprint(endPort) + "\n"
+	ports := scanner.Scan(1, TCP_MAX_RANGE)
+	resp := "gotcp L4 scanner (https://github.com/foroozf001/gotcp)\n"
+	resp += "Target host: " + scanner.Host + "\n"
+	resp += "Port range: " + fmt.Sprint(1) + "-" + fmt.Sprint(TCP_MAX_RANGE) + "\n"
 	resp += "-"
 	for _, port := range ports {
-		s := fmt.Sprintf("\ntcp/%d\t%s", port, "UP")
+		s := fmt.Sprintf("\n%d/tcp", port)
 		resp += s
 	}
 	if len(ports) < 1 {
 		resp += "\nNone"
 	}
-	fmt.Fprintln(w, resp)
+	w.Write([]byte(resp))
 }
