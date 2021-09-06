@@ -4,6 +4,7 @@ metadata:
   labels:
     app: gotcp
   name: gotcp
+  namespace: demo
 spec:
   replicas: 1
   selector:
@@ -15,15 +16,24 @@ spec:
         app: gotcp
     spec:
       containers:
-      - image: farazf001/gotcp:latest
+      - image: farazf001/gotcp:1.0
         name: gotcp
         ports:
         - containerPort: 8080
-        resources:
-          requests:
-            memory: "64Mi"
-            cpu: "250m"
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: gotcp
+  name: gotcp
+  namespace: demo
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+    nodePort: 30080
+  selector:
+    app: gotcp
+  type: NodePort
