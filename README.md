@@ -30,3 +30,8 @@ docker cp /home/fforoozan/repos/gotcp/k8s/ sandbox-control-plane:/gotcp/
 ```sh
 docker cp sandbox-control-plane:/gotcp/k8s/ /home/fforoozan/repos/gotcp/
 ```
+Testing endpoints locally:
+```sh
+curl "172.19.0.2:30080/health?host=redis.demo.svc&port=6379"
+curl "172.19.0.2:30080/report?host=redis.demo.svc"
+```
