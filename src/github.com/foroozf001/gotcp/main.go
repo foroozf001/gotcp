@@ -34,9 +34,9 @@ func Health(w http.ResponseWriter, r *http.Request) {
 	ports := scanner.Scan(scanner.Port, scanner.Port)
 	if len(ports) < 1 {
 		w.WriteHeader(http.StatusRequestTimeout)
-		w.Write([]byte("408 Request Timeout"))
+		w.Write([]byte("408 Request Timeout\n"))
 	} else {
-		w.Write([]byte("200 OK"))
+		w.Write([]byte("200 OK\n"))
 	}
 }
 
@@ -58,7 +58,7 @@ func Report(w http.ResponseWriter, r *http.Request) {
 	if len(ports) < 1 {
 		resp += "\nNone"
 	}
-	w.Write([]byte(resp))
+	w.Write([]byte(resp + "\n"))
 }
 
 func GetUrlParameters(r *http.Request, s ...string) []string {
@@ -72,6 +72,5 @@ func GetUrlParameters(r *http.Request, s ...string) []string {
 		}
 		values = append(values, string(keys[0]))
 	}
-	fmt.Println(values)
 	return values
 }
