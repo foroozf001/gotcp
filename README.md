@@ -1,5 +1,11 @@
-# Gotcp L4 scanner
-Simple layer 4 scanner written in golang.
+# GOTCP L4 scanner
+Simple lightweight layer 4 scanner written in golang. The scanner performs two tasks:
+* checking connectivity to targets and exposing connectivity status on a server endpoint
+* scanning targets over TCP ports range (1- 65,535) and exposing results on a server endpoint
+# Image pull
+```sh
+docker image pull farazf001/gotcp:latest
+```
 ## Image build
 ```sh
 docker build -t farazf001/gotcp:latest -f Dockerfile .
