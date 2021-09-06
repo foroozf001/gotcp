@@ -18,3 +18,15 @@ docker container run --name=gotcp -dt -p 8080:8080 farazf001/gotcp:latest
 The webserver exposes two endpoints with customizable URL parameters:
 * ```/health?host=172.18.0.2&port=80```
 * ```/report?host=172.18.0.2```
+## Sandbox Kubernetes cluster
+Run the Kind configuration file to provision a cluster:
+```sh
+kind create cluster --config kind/config.yaml
+```
+Copy project files to and from Kubernetes control plane:
+```sh
+docker cp /home/fforoozan/repos/gotcp/k8s/ sandbox-control-plane:/gotcp/
+```
+```sh
+docker cp sandbox-control-plane:/gotcp/k8s/ /home/fforoozan/repos/gotcp/
+```
