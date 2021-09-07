@@ -2,7 +2,7 @@
 Simple lightweight layer 4 scanner written in golang. The scanner performs two tasks:
 * checking connectivity to targets and exposing connectivity status on a server endpoint
 * scanning targets over TCP ports range (1- 65,535) and exposing results on a server endpoint
-## Pull image from Dockerhub
+## Pull image from public registry
 ```sh
 docker image pull farazf001/gotcp:latest
 ```
@@ -14,24 +14,29 @@ docker build -t farazf001/gotcp:latest -f Dockerfile .
 ```sh
 docker container run --name=gotcp -dt -p 8080:8080 farazf001/gotcp:latest
 ```
-## Webserver endpoints
+## Webserver
 The webserver exposes two endpoints with customizable URL parameters:
 * ```/health?host=172.18.0.2&port=80```
 * ```/report?host=172.18.0.2```
-## Sandbox Kubernetes cluster
-Run the Kind configuration file to provision a cluster:
+# Sandbox testing
+Run the Kind configuration file to provision a Kubernetes cluster:
 ```sh
 kind create cluster --config kind/config.yaml
 ```
-Copy project files to and from Kubernetes control plane:
+Copy manifest files to Kubernetes control plane:
 ```sh
 docker cp /home/fforoozan/repos/gotcp/k8s/ sandbox-control-plane:/gotcp/
 ```
+Open shell to control plane:
 ```sh
-docker cp sandbox-control-plane:/gotcp/k8s/ /home/fforoozan/repos/gotcp/
+docker container exec -it sandbox-control-plane /bin/bash
 ```
-Testing endpoints locally:
+Deploy Kubernetes API resources:
 ```sh
-curl "172.19.0.2:30080/health?host=redis.demo.svc&port=6379"
-curl "172.19.0.2:30080/report?host=redis.demo.svc"
+kubectl apply -f gotcp/
+```
+Perform HTTP requests against node ports 30080-30082:
+```sh
+curl "localhost:30080/health?host=redis.demo.svc&port=6379"
+curl "localhost:30080/report?host=redis.demo.svc"
 ```
