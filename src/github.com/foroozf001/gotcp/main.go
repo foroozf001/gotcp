@@ -15,7 +15,7 @@ const MAX_RANGE = 65535
 func main() {
 	http.HandleFunc("/health", Health)
 	http.HandleFunc("/report", Report)
-	fmt.Printf("Starting gotcp server on port %s\n", SERVER_PORT)
+	fmt.Printf("Starting GOTCP server on port %s\n", SERVER_PORT)
 	_ = http.ListenAndServe(SERVER_PORT, nil)
 }
 
@@ -25,7 +25,9 @@ func Health(w http.ResponseWriter, r *http.Request) {
 	params := GetUrlParameters(r, URL_HOST, URL_PORT)
 	scanner.Host = params[0]
 	if len(scanner.Host) < 1 {
-		panic("empty " + URL_HOST)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400 Bad Request\n"))
+		panic("invalid " + URL_HOST)
 	}
 	scanner.Port, err = strconv.ParseInt(params[1], 10, 64)
 	if err != nil {
@@ -33,8 +35,8 @@ func Health(w http.ResponseWriter, r *http.Request) {
 	}
 	ports := scanner.Scan(scanner.Port, scanner.Port)
 	if len(ports) < 1 {
-		w.WriteHeader(http.StatusRequestTimeout)
-		w.Write([]byte("408 Request Timeout\n"))
+		w.WriteHeader(http.StatusGatewayTimeout)
+		w.Write([]byte("504 Gateway Time-out\n"))
 	} else {
 		w.Write([]byte("200 OK\n"))
 	}
@@ -45,7 +47,9 @@ func Report(w http.ResponseWriter, r *http.Request) {
 	params := GetUrlParameters(r, URL_HOST)
 	scanner.Host = params[0]
 	if len(scanner.Host) < 1 {
-		panic("empty " + URL_HOST)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400 Bad Request\n"))
+		panic("invalid " + URL_HOST)
 	}
 	ports := scanner.Scan(1, MAX_RANGE)
 	resp := "Target host: " + scanner.Host + "\n"
