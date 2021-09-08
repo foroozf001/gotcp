@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"sort"
+	"time"
 )
 
 type Scanner struct {
@@ -13,6 +14,7 @@ type Scanner struct {
 }
 
 const ULIMIT = 1024
+const TIMEOUT = 200 * time.Millisecond
 
 func (s *Scanner) Scan(first int64, last int64) []int64 {
 	ports := make(chan int64, ULIMIT)
@@ -41,7 +43,7 @@ func (s *Scanner) Scan(first int64, last int64) []int64 {
 func Worker(host string, ports, results chan int64) {
 	for p := range ports {
 		address := fmt.Sprintf("%s:%d", host, p)
-		conn, err := net.Dial("tcp", address)
+		conn, err := net.DialTimeout("tcp", address, TIMEOUT)
 		if err != nil {
 			results <- 0
 			continue
