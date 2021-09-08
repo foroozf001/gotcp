@@ -27,7 +27,7 @@ Copy manifest files to Kubernetes control plane:
 ```sh
 docker cp /home/fforoozan/repos/gotcp/k8s/ sandbox-control-plane:/gotcp/
 ```
-Open shell to control plane:
+Open Shell to Kubernetes control plane:
 ```sh
 docker container exec -it sandbox-control-plane /bin/bash
 ```
@@ -39,4 +39,8 @@ Perform HTTP requests against node ports 30080-30082:
 ```sh
 curl "localhost:30080/health?host=redis.demo.svc&port=6379"
 curl "localhost:30080/report?host=redis.demo.svc"
+```
+Deleting sandbox:
+```sh
+kind delete cluster --name=sandbox
 ```
