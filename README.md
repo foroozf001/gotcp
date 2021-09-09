@@ -25,19 +25,20 @@ kind create cluster --config kind/config.yaml
 ```
 Copy manifest files to Kubernetes control plane:
 ```sh
-docker cp /home/fforoozan/repos/gotcp/k8s/ sandbox-control-plane:/gotcp/
-```
-Open Shell to Kubernetes control plane:
-```sh
-docker container exec -it sandbox-control-plane /bin/bash
+docker cp /home/fforoozan/Repositories/gotcp/k8s/ sandbox-control-plane:/gotcp/
 ```
 Deploy Kubernetes API resources:
 ```sh
-kubectl apply -f gotcp/
+docker container exec -it sandbox-control-plane kubectl create ns demo
+```
+```sh
+docker container exec -it sandbox-control-plane kubectl apply -f /gotcp
 ```
 Perform HTTP requests against node ports 30080-30082:
 ```sh
 curl "localhost:30080/health?host=redis.demo.svc&port=6379"
+```
+```sh
 curl "localhost:30080/report?host=redis.demo.svc"
 ```
 Deleting sandbox:
