@@ -7,62 +7,64 @@ import (
 	"strconv"
 )
 
-const SERVER_PORT = ":8080"
+const SERVER_PORT = 8080
 const URL_HOST = "host"
 const URL_PORT = "port"
-const MAX_RANGE = 65535
+const TCP_RANGE = 65535
+const BAD_REQUEST = "400 Bad Request"
+const GATEWAY_TIMEOUT = "504 Gateway Time-out"
+const OK = "200 OK"
 
 func main() {
 	http.HandleFunc("/health", Health)
 	http.HandleFunc("/report", Report)
-	fmt.Printf("Starting GOTCP server on port %s\n", SERVER_PORT)
-	_ = http.ListenAndServe(SERVER_PORT, nil)
+	fmt.Printf("Starting GOTCP server on port %d\n", SERVER_PORT)
+	_ = http.ListenAndServe(":"+fmt.Sprint(SERVER_PORT), nil)
 }
 
 func Health(w http.ResponseWriter, r *http.Request) {
 	var scanner Scanner
 	var err error
 	params := GetUrlParameters(r, URL_HOST, URL_PORT)
-	scanner.Host = params[0]
-	if len(scanner.Host) < 1 {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("400 Bad Request\n"))
-		panic("invalid " + URL_HOST)
-	}
 	scanner.Port, err = strconv.ParseInt(params[1], 10, 64)
 	if err != nil {
 		panic(err)
 	}
+	scanner.Host = params[0]
+	if !scanner.HasValidHost() || !scanner.HasValidPort() {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(BAD_REQUEST))
+		return
+	}
 	ports := scanner.Scan(scanner.Port, scanner.Port)
 	if len(ports) < 1 {
 		w.WriteHeader(http.StatusGatewayTimeout)
-		w.Write([]byte("504 Gateway Time-out\n"))
+		w.Write([]byte(GATEWAY_TIMEOUT))
+		return
 	} else {
-		w.Write([]byte("200 OK\n"))
+		w.Write([]byte(OK))
 	}
 }
 
 func Report(w http.ResponseWriter, r *http.Request) {
 	var scanner Scanner
+	var resp string
 	params := GetUrlParameters(r, URL_HOST)
 	scanner.Host = params[0]
-	if len(scanner.Host) < 1 {
+	if !scanner.HasValidHost() {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("400 Bad Request\n"))
-		panic("invalid " + URL_HOST)
+		w.Write([]byte(BAD_REQUEST))
+		return
 	}
-	ports := scanner.Scan(1, MAX_RANGE)
-	resp := "Target host: " + scanner.Host + "\n"
-	resp += "Port range: " + fmt.Sprint(1) + "-" + fmt.Sprint(MAX_RANGE) + "\n"
-	resp += "-"
+	ports := scanner.Scan(1, TCP_RANGE)
 	for _, port := range ports {
-		s := fmt.Sprintf("\n%d/tcp", port)
+		s := fmt.Sprintf("%d/tcp\n", port)
 		resp += s
 	}
 	if len(ports) < 1 {
-		resp += "\nNone"
+		resp += "None\n"
 	}
-	w.Write([]byte(resp + "\n"))
+	w.Write([]byte(resp))
 }
 
 func GetUrlParameters(r *http.Request, s ...string) []string {

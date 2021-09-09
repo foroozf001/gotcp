@@ -16,6 +16,14 @@ type Scanner struct {
 const ULIMIT = 1024
 const TIMEOUT = 200 * time.Millisecond
 
+func (s *Scanner) HasValidHost() bool {
+	return len(s.Host) > 0
+}
+
+func (s *Scanner) HasValidPort() bool {
+	return s.Port > 0 && s.Port <= TCP_RANGE
+}
+
 func (s *Scanner) Scan(first int64, last int64) []int64 {
 	ports := make(chan int64, ULIMIT)
 	results := make(chan int64)
