@@ -8,7 +8,7 @@ docker image pull farazf001/gotcp:latest
 ```
 ## Build image locally
 ```sh
-docker build -t farazf001/gotcp:latest -f Dockerfile .
+docker image build -t farazf001/gotcp:latest -f Dockerfile .
 ```
 ## Run container
 ```sh
