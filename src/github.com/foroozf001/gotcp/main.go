@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 const SERVER_PORT = 8080
@@ -23,6 +24,7 @@ func main() {
 }
 
 func Health(w http.ResponseWriter, r *http.Request) {
+	defer TimeTrack(time.Now())
 	var scanner Scanner
 	var err error
 	params := GetUrlParameters(r, URL_HOST, URL_PORT)
@@ -47,6 +49,7 @@ func Health(w http.ResponseWriter, r *http.Request) {
 }
 
 func Report(w http.ResponseWriter, r *http.Request) {
+	defer TimeTrack(time.Now())
 	var scanner Scanner
 	var resp string
 	params := GetUrlParameters(r, URL_HOST)
@@ -79,4 +82,9 @@ func GetUrlParameters(r *http.Request, s ...string) []string {
 		values = append(values, string(keys[0]))
 	}
 	return values
+}
+
+func TimeTrack(start time.Time) {
+	elapsed := time.Since(start)
+	log.Printf("elapsed time: %s", elapsed)
 }
