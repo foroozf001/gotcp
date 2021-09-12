@@ -64,7 +64,7 @@ func Report(w http.ResponseWriter, r *http.Request) {
 	var resp string
 	var ports []int64
 
-	params = GetUrlParameters(r, URL_HOST, URL_PORT)
+	params = GetUrlParameters(r, URL_HOST)
 	var scanner = Scanner{
 		Host:     params[0],
 		Protocol: "tcp",
