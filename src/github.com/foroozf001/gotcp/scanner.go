@@ -9,27 +9,22 @@ import (
 )
 
 type Scanner struct {
-	Host string
-	Port int64
+	Host     string
+	Protocol string
+	Timeout  time.Duration
+	Ulimit   int
 }
-
-const ULIMIT = 1024
-const TIMEOUT = 200 * time.Millisecond
 
 func (s *Scanner) HasValidHost() bool {
 	return len(s.Host) > 0
 }
 
-func (s *Scanner) HasValidPort() bool {
-	return s.Port > 0 && s.Port <= TCP_RANGE
-}
-
 func (s *Scanner) Scan(first int64, last int64) []int64 {
-	ports := make(chan int64, ULIMIT)
+	ports := make(chan int64, s.Ulimit)
 	results := make(chan int64)
 	var open []int64
 	for i := 0; i < cap(ports); i++ {
-		go Worker(s.Host, ports, results)
+		go Worker(s.Protocol, s.Host, s.Timeout, ports, results)
 	}
 	go func() {
 		for i := first; i <= last; i++ {
@@ -48,15 +43,15 @@ func (s *Scanner) Scan(first int64, last int64) []int64 {
 	return open
 }
 
-func Worker(host string, ports, results chan int64) {
+func Worker(protocol string, host string, timeout time.Duration, ports, results chan int64) {
 	for p := range ports {
 		address := fmt.Sprintf("%s:%d", host, p)
-		conn, err := net.DialTimeout("tcp", address, TIMEOUT)
+		conn, err := net.DialTimeout(protocol, address, timeout)
 		if err != nil {
 			results <- 0
 			continue
 		}
-		log.Printf("dial tcp %s:%d: connect: connection succeeded\n", host, p)
+		log.Printf("dial %s %s:%d: connect: connection succeeded\n", protocol, host, p)
 		conn.Close()
 		results <- p
 	}

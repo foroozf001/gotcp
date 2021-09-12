@@ -11,10 +11,6 @@ import (
 const SERVER_PORT = 8080
 const URL_HOST = "host"
 const URL_PORT = "port"
-const TCP_RANGE = 65535
-const BAD_REQUEST = "400 Bad Request"
-const GATEWAY_TIMEOUT = "504 Gateway Time-out"
-const OK = "200 OK"
 
 func main() {
 	http.HandleFunc("/health", Health)
@@ -25,41 +21,63 @@ func main() {
 
 func Health(w http.ResponseWriter, r *http.Request) {
 	defer TimeTrack(time.Now())
-	var scanner Scanner
-	var err error
+
 	params := GetUrlParameters(r, URL_HOST, URL_PORT)
-	scanner.Port, err = strconv.ParseInt(params[1], 10, 64)
+
+	var err error
+	var port int64
+	var ports []int64
+	var scanner = Scanner{
+		Host:     params[0],
+		Protocol: "tcp",
+		Timeout:  200 * time.Millisecond,
+		Ulimit:   1024,
+	}
+
+	if !scanner.HasValidHost() {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(http.StatusText(http.StatusBadRequest)))
+		return
+	}
+
+	port, err = strconv.ParseInt(params[1], 10, 64)
 	if err != nil {
 		panic(err)
 	}
-	scanner.Host = params[0]
-	if !scanner.HasValidHost() || !scanner.HasValidPort() {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(BAD_REQUEST))
-		return
-	}
-	ports := scanner.Scan(scanner.Port, scanner.Port)
+
+	ports = scanner.Scan(port, port)
+
 	if len(ports) < 1 {
-		w.WriteHeader(http.StatusGatewayTimeout)
-		w.Write([]byte(GATEWAY_TIMEOUT))
+		w.WriteHeader(http.StatusRequestTimeout)
+		w.Write([]byte(http.StatusText(http.StatusRequestTimeout)))
 		return
 	} else {
-		w.Write([]byte(OK))
+		w.Write([]byte(http.StatusText(http.StatusOK)))
 	}
 }
 
 func Report(w http.ResponseWriter, r *http.Request) {
 	defer TimeTrack(time.Now())
-	var scanner Scanner
-	var resp string
+
 	params := GetUrlParameters(r, URL_HOST)
-	scanner.Host = params[0]
+
+	var resp string
+	var ports []int64
+	var scanner = Scanner{
+		Host:     params[0],
+		Protocol: "tcp",
+		Timeout:  200 * time.Millisecond,
+		Ulimit:   1024,
+	}
+
 	if !scanner.HasValidHost() {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(BAD_REQUEST))
+		w.Write([]byte(http.StatusText(http.StatusBadRequest)))
 		return
 	}
-	ports := scanner.Scan(1, TCP_RANGE)
+
+	ports = scanner.Scan(1, 65535)
+
 	for _, port := range ports {
 		s := fmt.Sprintf("%d/tcp\n", port)
 		resp += s
@@ -67,13 +85,14 @@ func Report(w http.ResponseWriter, r *http.Request) {
 	if len(ports) < 1 {
 		resp += "None\n"
 	}
+
 	w.Write([]byte(resp))
 }
 
 func GetUrlParameters(r *http.Request, s ...string) []string {
-	keys := []string{}
+	var keys = []string{}
+	var values = []string{}
 	keys = append(keys, s...)
-	values := []string{}
 	for _, key := range keys {
 		keys, ok := r.URL.Query()[key]
 		if !ok {
