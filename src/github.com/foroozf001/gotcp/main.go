@@ -22,11 +22,12 @@ func main() {
 func Health(w http.ResponseWriter, r *http.Request) {
 	defer TimeTrack(time.Now())
 
-	params := GetUrlParameters(r, URL_HOST, URL_PORT)
-
+	var params []string
 	var err error
 	var port int64
 	var ports []int64
+
+	params = GetUrlParameters(r, URL_HOST, URL_PORT)
 	var scanner = Scanner{
 		Host:     params[0],
 		Protocol: "tcp",
@@ -59,10 +60,11 @@ func Health(w http.ResponseWriter, r *http.Request) {
 func Report(w http.ResponseWriter, r *http.Request) {
 	defer TimeTrack(time.Now())
 
-	params := GetUrlParameters(r, URL_HOST)
-
+	var params []string
 	var resp string
 	var ports []int64
+
+	params = GetUrlParameters(r, URL_HOST, URL_PORT)
 	var scanner = Scanner{
 		Host:     params[0],
 		Protocol: "tcp",
